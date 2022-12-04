@@ -11,13 +11,14 @@ import {
 import { useEffect, useState } from "react";
 import gsap from "gsap";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-
-const size = {
-  width: 800,
-  height: 600,
-};
+import { render } from "@testing-library/react";
 
 function App() {
+  const size = {
+    width: window.innerWidth,
+    height: window.innerHeight,
+  };
+
   const [mouse, setMouse] = useState({
     x: 0,
     y: 0,
@@ -34,7 +35,7 @@ function App() {
   // scene.add(axesHelper);
 
   const aspectRatio = size.width / size.height;
-  const camera = new PerspectiveCamera(75, size.width / size.height, 0.1, 100);
+  const camera = new PerspectiveCamera(75, aspectRatio, 0.1, 100);
   // const camera = new THREE.OrthographicCamera(
   //   -1 * aspectRatio,
   //   1 * aspectRatio,
@@ -64,11 +65,39 @@ function App() {
   // }, []);
 
   useEffect(() => {
+    window.addEventListener("resize", () => {
+      size.width = window.innerWidth;
+      size.height = window.innerHeight;
+      camera.aspect = size.width / size.height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(size.width, size.height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    window.addEventListener("dblclick", () => {
+      const fullScreen =
+        document.fullscreenElement || document.webkitFullscreenElement;
+      if (!fullScreen) {
+        if (canvas.requestFullscreen) {
+          canvas.requestFullscreen();
+          return;
+        }
+        canvas.webkitRequestFullscreen();
+        return;
+      }
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+        return;
+      }
+      document.webkitExitFullscreen();
+    });
+
     const canvas = document.getElementById("red-box");
 
     const renderer = new WebGLRenderer({ canvas });
 
     renderer.setSize(size.width, size.height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
     const controls = new OrbitControls(camera, canvas);
     controls.enableDamping = true;
@@ -97,7 +126,7 @@ function App() {
       requestAnimationFrame(tick);
     };
     tick();
-  }, [mouse]);
+  }, []);
 
   return (
     <div className="App">
